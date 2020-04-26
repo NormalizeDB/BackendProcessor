@@ -22,3 +22,31 @@ For a set of functional dependencies (FDs)...
 - [ ] Decompose a relation into BCNF
     - [ ] Add sufficient # of test cases
     - [ ] Deploy  
+    
+#### Candidate Key Generation
+1. Determining mandatory attributes intuition: <br>    
+      R(&alpha;<sub>1</sub>, &alpha;<sub>2</sub>, ..., &alpha;<sub>n</sub>) <br>
+      Where R is our relation. <br><br>
+      &beta;<sub>1</sub> ⇒ &mu;<sub>1</sub><br>
+      &beta;<sub>2</sub> ⇒ &mu;<sub>2</sub><br>
+      &beta;<sub>3</sub> ⇒ &mu;<sub>3</sub><br>
+      .<br>.<br>
+      &beta;<sub>n</sub> ⇒ &mu;<sub>n</sub><br><br>
+      Where &beta;<sub>i</sub>, &mu;<sub>i</sub> ∈ &sum;<super>*</super> {&alpha;<sub>1</sub>, &alpha;<sub>2</sub>, ..., &alpha;<sub>n</sub>}
+      <br>for i &le; n
+      <br><br>
+      &Alpha; = [&nbsp;R-&nbsp;[(&mu;<sub>1</sub> &cup; &mu;<sub>2</sub> &cup; &mu;<sub>3</sub> &cup; ... &cup; &mu;<sub>n</sub>)&nbsp;&cap; R]&nbsp;]
+      <br>
+      Where &Alpha; represents the attributes of the relation that are <b>NOT</b> included within the 
+      derivation portion (right side), of the FD 
+      <br><br>
+      &Beta; = [&nbsp;R-&nbsp;[(&beta;<sub>1</sub>&mu;<sub>1</sub> &cup; &beta;<sub>2</sub>&mu;<sub>2</sub> &cup; &beta;<sub>3</sub>&mu;<sub>3</sub> &cup; ... &cup; 
+      &beta;<sub>n</sub>&mu;<sub>n</sub>)&nbsp;&cap; R]&nbsp;]
+      <br>
+      Where &Beta; represents the attributes of the relation that are <b>NOT</b> included in 
+      any of the FDs, on either side 
+      <br><br>
+      <br>
+      &gamma; = &Alpha;&cup;&Beta; 
+      <br>
+      Where &gamma; is the set of attributes that <b>must be included within the candidate key</b> 
