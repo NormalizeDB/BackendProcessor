@@ -24,9 +24,10 @@ public class CandidateKeyGenerator {
 
     public static void main(String[] args) {
         //Temporary Tests
-        CandidateKeyGenerator ckg = new CandidateKeyGenerator(new String[]{"A", "B", "C", "D"});
+        CandidateKeyGenerator ckg = new CandidateKeyGenerator(new String[]{"A", "B", "C", "D", "E"});
         String[] res = ckg.generateCandidateKeys(new String[][][]{
-                {{"A", "B"}, {"C"}},
+                {{"A"}, {"B"}},
+                {{"B"}, {"C"}},
                 {{"C"}, {"D"}},
                 {{"D"}, {"A"}}
         });
@@ -126,7 +127,7 @@ public class CandidateKeyGenerator {
                     accessoryHeuristic = i;
                 }
                 if (heuristic == 0) {
-                    candidateKeys.add(ckPlaceholder.toArray(new Integer[candidateKeys.size()]));
+                    candidateKeys.add(ckPlaceholder.toArray(new Integer[ckPlaceholder.size()]));
                 }
                 ckPlaceholder.removeLast();
             }
@@ -157,9 +158,12 @@ public class CandidateKeyGenerator {
         for (int i = 0; i < functionalDependencies.length; i++) {
             unmatched.add(i);
         }
-        boolean limitReached = false;
 
-        while(!limitReached) {
+        int priorSize = 0;
+        //If the prior unmatched FD size is the same as the unmatched FD size AFTER the loop, we break; This indicates
+        //clearly that we cannot derive any more attributes from our given set of FDs
+        do {
+            priorSize = unmatched.size();
 
             for (Integer i : unmatched) {
                 //Grab left side of FD
@@ -171,7 +175,6 @@ public class CandidateKeyGenerator {
                 //If our CK's length is less than the FD's length, we break. Since the FD array is sorted,
                 //we can assume all proceeding FDs will be larger as well
                 if(currentFD.size() > ckAttrSet.size()){
-                    limitReached = true;
                     break;
                 }
                 currentFD.removeAll(ckAttrSet);
@@ -185,10 +188,7 @@ public class CandidateKeyGenerator {
                     break;
                 }
             }
-            if(unmatched.isEmpty()){
-                break;
-            }
-        }
+        } while(!unmatched.isEmpty() && priorSize != unmatched.size());
         //Whether our attribute set is equivalent to our current derived CK set
         return unmatched.size();
     }
