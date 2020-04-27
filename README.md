@@ -50,3 +50,11 @@ For a set of functional dependencies (FDs)...
       &gamma; = &Alpha;&cup;&Beta; 
       <br>
       Where &gamma; is the set of attributes that <b>must be included within the candidate key</b> 
+      <br><br>
+
+2. Adding <i>accessory</i> attributes onto the necessary minimal attributes (intuition above):
+    * In this context, an <b>accessory attribute</b> is one that is not part of our set of necessary minimal attributes, but exists within
+    the relational schema<br>
+    <br> A heuristic approach is taken, where accessory attributes are added onto a working CK attribute, and a heuristic based on the amount of unmatched FDs is taken.
+    The accessory attribute that is associated with the smallest heuristic value, is added onto the working CK attribute, and the
+    process repeats until we've reached a minimal heuristic value of 0. 

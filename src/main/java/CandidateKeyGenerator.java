@@ -11,32 +11,35 @@ import java.util.stream.IntStream;
 
 public class CandidateKeyGenerator {
     private Map<String, Integer> attributeMapping;
+    private Map<Integer, String> reversedAttrMapping;
 
     public CandidateKeyGenerator(String[] relation){
         attributeMapping = IntStream.range(0, relation.length)
                 .mapToObj(index -> new Object[]{relation[index], index})
                 .collect(Collectors.toMap(x -> String.valueOf(x[0]), y -> Integer.valueOf(String.valueOf(y[1]))));
+        reversedAttrMapping = IntStream.range(0, relation.length)
+                .mapToObj(index -> new Object[]{relation[index], index})
+                .collect(Collectors.toMap(x -> Integer.valueOf(String.valueOf(x[1])), y -> String.valueOf(y[0])));
     }
 
     public static void main(String[] args) {
         //Temporary Tests
-        CandidateKeyGenerator ckg = new CandidateKeyGenerator(new String[]{"A", "B", "C", "D", "E"});
-        ckg.generateCandidateKeys(new String[][][]{
-                {{"D","B","C"}, {"E"}},
-                {{"D","B"}, {"E"}},
-                {{"A", "B"}, {"C", "B"}},
-//                {{"A","D"},{"C"}},
-//                {{"A","C"},{"B"}},
-                {{"A"},{"D"}}
+        CandidateKeyGenerator ckg = new CandidateKeyGenerator(new String[]{"A", "B", "C", "D"});
+        String[] res = ckg.generateCandidateKeys(new String[][][]{
+                {{"A", "B"}, {"C"}},
+                {{"C"}, {"D"}},
+                {{"D"}, {"A"}}
         });
+        for(String ck: res){
+            System.out.println(ck);
+        }
     }
 
-    public String generateCandidateKeys(String[][][] functionalDependencies){
+    public String[] generateCandidateKeys(String[][][] functionalDependencies){
         Integer[][][] standardizedFDs = convertFunctionalDependencies(functionalDependencies);
         Integer[] res = findEssentialAttributes(standardizedFDs);
-        determineCandidateKeys(res, standardizedFDs);
-
-        return null;
+        String[] candidateKeys = determineCandidateKeys(res, standardizedFDs);
+        return candidateKeys;
     }
 
     /**
@@ -94,20 +97,61 @@ public class CandidateKeyGenerator {
         return finalRes;
     }
 
-    private Integer[][] determineCandidateKeys(Integer[] essentialAttr, Integer[][][] functionalDependencies) {
+    private String[] determineCandidateKeys(Integer[] essentialAttr, Integer[][][] functionalDependencies) {
+        LinkedList<Integer> accessoryAttributes = new LinkedList<>(attributeMapping.values());
+        accessoryAttributes.removeAll(Arrays.stream(essentialAttr).collect(Collectors.toList()));
+
         //Sort FDs based on length of keys (left side)
         Arrays.sort(functionalDependencies, Comparator.comparingInt(x -> x[0].length));
+        //We'll use this a variable to use as our working candidate key list
+        LinkedList<Integer> ckPlaceholder = new LinkedList<>(Arrays.stream(essentialAttr).collect(Collectors.toList()));
 
-        System.out.println(testCandidateKey(essentialAttr, functionalDependencies));
-        return null;
+        LinkedList<Integer[]> candidateKeys = new LinkedList<>();
+        //If the minimum, most essential attributes turns out to be our key, return. Adding new attributes is not minimal
+        //and we can't remove any element from our essential attr list
+        if (testCandidateKey(ckPlaceholder, functionalDependencies) == 0) {
+            return convertCandidateKeys(new Integer[][]{essentialAttr});
+        }
+
+        while (ckPlaceholder.size() < attributeMapping.size()) {
+            //Keep track of the accessory attribute with the most minimal heuristic
+            //Default to the first accessoryHeuristic...
+            Integer accessoryHeuristic = accessoryAttributes.getFirst();
+            int minimalHeuristic = Integer.MAX_VALUE;
+            for (Integer i : accessoryAttributes) {
+                ckPlaceholder.addLast(i);
+                int heuristic = testCandidateKey(ckPlaceholder, functionalDependencies);
+                if (heuristic < minimalHeuristic) {
+                    minimalHeuristic = heuristic;
+                    accessoryHeuristic = i;
+                }
+                if (heuristic == 0) {
+                    candidateKeys.add(ckPlaceholder.toArray(new Integer[candidateKeys.size()]));
+                }
+                ckPlaceholder.removeLast();
+            }
+            if (minimalHeuristic == 0) {
+                break;
+            } else {
+                //Add the accessory attribute that's associated with the most minimal heuristic to the tail end of our
+                //working candidate key list
+                ckPlaceholder.addLast(accessoryHeuristic);
+            }
+        }
+        return convertCandidateKeys(candidateKeys.toArray(new Integer[candidateKeys.size()][]));
     }
 
-    private boolean testCandidateKey(Integer[] currentCK, Integer[][][] functionalDependencies) {
+    /**
+     * Tests whether a candidate key is valid
+     *
+     * @param currentCK
+     * @param functionalDependencies
+     * @return Amount of unmatched functional dependencies
+     */
+    private int testCandidateKey(List<Integer> currentCK, Integer[][][] functionalDependencies) {
         //ASSUMPTION: FD keys are sorted by length
         Set<Integer> ckAttrSet = new TreeSet<>();
-        ckAttrSet.addAll(Arrays
-                .stream(currentCK)
-                .collect(Collectors.toSet()));
+        ckAttrSet.addAll(currentCK);
 
         List<Integer> unmatched = new LinkedList<>();
         for (int i = 0; i < functionalDependencies.length; i++) {
@@ -146,10 +190,24 @@ public class CandidateKeyGenerator {
             }
         }
         //Whether our attribute set is equivalent to our current derived CK set
-        return unmatched.isEmpty();
+        return unmatched.size();
     }
 
-    private String[] convertCandidateKeys(int[][] candidateKeys) {
-        return null;
+    /**
+     * Converts candidate keys from indicies to appropriate attribute names
+     * @param candidateKeys
+     * @return Collection of candidate keys
+     */
+    private String[] convertCandidateKeys(Integer[][] candidateKeys) {
+        List<String> convertedRes = Arrays.stream(candidateKeys)
+                .map(x -> {
+                    StringBuilder tempCK = new StringBuilder();
+                    for(Integer i: x){
+                        tempCK.append(reversedAttrMapping.get(i));
+                    }
+                    return tempCK.toString();
+                })
+                .collect(Collectors.toList());
+        return convertedRes.toArray(new String[convertedRes.size()]);
     }
 }
