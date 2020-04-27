@@ -1,9 +1,11 @@
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -18,19 +20,22 @@ public class CandidateKeyGenerator {
 
     public static void main(String[] args) {
         //Temporary Tests
-        CandidateKeyGenerator ckg = new CandidateKeyGenerator(new String[]{"A", "B", "C", "D"});
+        CandidateKeyGenerator ckg = new CandidateKeyGenerator(new String[]{"A", "B", "C", "D", "E"});
         ckg.generateCandidateKeys(new String[][][]{
-                {{"A","B","C"}, {"D"}},
-                {{"C"}, {"A"}}
+                {{"D","B","C"}, {"E"}},
+                {{"D","B"}, {"E"}},
+                {{"A", "B"}, {"C", "B"}},
+//                {{"A","D"},{"C"}},
+//                {{"A","C"},{"B"}},
+                {{"A"},{"D"}}
         });
     }
 
     public String generateCandidateKeys(String[][][] functionalDependencies){
         Integer[][][] standardizedFDs = convertFunctionalDependencies(functionalDependencies);
-        int[] res = findEssentialAttributes(standardizedFDs);
-        for(int i: res){
-            System.out.println(i);
-        }
+        Integer[] res = findEssentialAttributes(standardizedFDs);
+        determineCandidateKeys(res, standardizedFDs);
+
         return null;
     }
 
@@ -61,7 +66,7 @@ public class CandidateKeyGenerator {
      * @param functionalDependencies
      * @return
      */
-    private int[] findEssentialAttributes(Integer[][][] functionalDependencies) {
+    private Integer[] findEssentialAttributes(Integer[][][] functionalDependencies) {
         //First we're going to simply determine whether the set of FDs contains all of the attr in the relation
         Set<Integer> attrSet = new HashSet(attributeMapping.values().stream().collect(Collectors.toSet()));
 
@@ -82,15 +87,69 @@ public class CandidateKeyGenerator {
         primaryEssentialSet.addAll(secondaryEssentialSet);
 
         List<Integer> mandatoryAttributes = new LinkedList<>(primaryEssentialSet);
-        int[] finalRes = new int[mandatoryAttributes.size()];
+        Integer[] finalRes = new Integer[mandatoryAttributes.size()];
         for(int i = 0; i < mandatoryAttributes.size(); i++){
             finalRes[i] = mandatoryAttributes.get(i);
         }
         return finalRes;
     }
 
-    private int[] determineCandidateKeys(int[] essentialAttr){
-        //TODO: Implement
+    private Integer[][] determineCandidateKeys(Integer[] essentialAttr, Integer[][][] functionalDependencies) {
+        //Sort FDs based on length of keys (left side)
+        Arrays.sort(functionalDependencies, Comparator.comparingInt(x -> x[0].length));
+
+        System.out.println(testCandidateKey(essentialAttr, functionalDependencies));
+        return null;
+    }
+
+    private boolean testCandidateKey(Integer[] currentCK, Integer[][][] functionalDependencies) {
+        //ASSUMPTION: FD keys are sorted by length
+        Set<Integer> ckAttrSet = new TreeSet<>();
+        ckAttrSet.addAll(Arrays
+                .stream(currentCK)
+                .collect(Collectors.toSet()));
+
+        List<Integer> unmatched = new LinkedList<>();
+        for (int i = 0; i < functionalDependencies.length; i++) {
+            unmatched.add(i);
+        }
+        boolean limitReached = false;
+
+        while(!limitReached) {
+
+            for (Integer i : unmatched) {
+                //Grab left side of FD
+                Set<Integer> currentFD = new HashSet<>();
+                currentFD.addAll(
+                        Arrays.stream(functionalDependencies[i][0])
+                                .collect(Collectors.toSet())
+                );
+                //If our CK's length is less than the FD's length, we break. Since the FD array is sorted,
+                //we can assume all proceeding FDs will be larger as well
+                if(currentFD.size() > ckAttrSet.size()){
+                    limitReached = true;
+                    break;
+                }
+                currentFD.removeAll(ckAttrSet);
+                //This would indicate that from our key set, we are able to derive another attribute; we
+                //add it to our original set above
+                if (currentFD.isEmpty()) {
+                    ckAttrSet.addAll(Arrays.stream(functionalDependencies[i][1])
+                            .collect(Collectors.toSet()));
+                    unmatched.remove(i);
+                    //go back to the unmatched FDs whose size < ckKeySize, so see if anything changed
+                    break;
+                }
+            }
+            if(unmatched.isEmpty()){
+                break;
+            }
+        }
+        //Whether our attribute set is equivalent to our current derived CK set
+        return unmatched.isEmpty();
+    }
+
+    private String[] convertCandidateKeys(int[][] candidateKeys) {
         return null;
     }
 }
