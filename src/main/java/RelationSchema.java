@@ -37,7 +37,20 @@ public class RelationSchema {
      */
     private Integer[] toIndex(String[] rawItemSet) {
         return Arrays.stream(rawItemSet)
-                .map(x -> attributeMapping.get(x))
+                .map(x -> {
+                    if (!attributeMapping.containsKey(x)) {
+                        StringBuilder sb = new StringBuilder(String.format("Attribute %s is not within the relation: [", x));
+                        for (int i = 0; i < attributes.length; i++) {
+                            sb.append(String.format("%s", attributes[i]));
+                            if (i != attributes.length - 1) {
+                                sb.append(",");
+                            }
+                        }
+                        sb.append("]");
+                        throw new RuntimeException(sb.toString());
+                    }
+                    return attributeMapping.get(x);
+                })
                 .toArray(Integer[]::new);
     }
 

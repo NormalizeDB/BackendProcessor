@@ -34,6 +34,9 @@ public class CandidateKeyGenerator {
     }
 
     public static String[] generateCandidateKeys(RelationSchema schema) {
+        if(schema.getAttributes() == null || schema.getAttributes().length == 0){
+            return null;
+        }
         Integer[] requiredAttributes = findEssentialAttributes(schema.getIntegrityConstraints(), schema.getAttributes().length);
         String[] candidateKeys = determineCandidateKeys(requiredAttributes, schema.getIntegrityConstraints(), schema.getAttributes());
         return candidateKeys;
