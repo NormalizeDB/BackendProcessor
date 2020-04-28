@@ -1,22 +1,21 @@
 public class FunctionalDependency {
-    private String[] keyVals;
-    private String[] derivations;
+    private Integer[] standardKeys;
+    private Integer[] standardDerivations;
 
-    public FunctionalDependency(String[] keyVals, String[] derivations){
-        this.keyVals = keyVals;
-        this.derivations = derivations;
+    public FunctionalDependency(Integer[] standardKeys, Integer[] standardDerivations){
+        this.standardKeys = standardKeys;
+        this.standardDerivations = standardDerivations;
     }
 
     public int getKeyLen(){
-        return keyVals.length;
+        return standardKeys.length;
     }
 
-    public String[] getKeyVals(){
-        return keyVals;
+    public Integer[] getStandardKeys(){
+        return standardKeys;
     }
 
-    public String[] getDerivations(){
-        return derivations;
+    public Integer[] getStandardDerivations(){
+        return standardDerivations;
     }
-
 }

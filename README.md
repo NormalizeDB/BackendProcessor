@@ -38,23 +38,14 @@ For a set of functional dependencies (FDs)...
       &Alpha; = [&nbsp;R-&nbsp;[(&mu;<sub>1</sub> &cup; &mu;<sub>2</sub> &cup; &mu;<sub>3</sub> &cup; ... &cup; &mu;<sub>n</sub>)&nbsp;&cap; R]&nbsp;]
       <br>
       Where &Alpha; represents the attributes of the relation that are <b>NOT</b> included within the 
-      derivation portion (right side), of the FD 
+      derivation portion (right side), of the FD. 
       <br><br>
-      &Beta; = [&nbsp;R-&nbsp;[(&beta;<sub>1</sub>&mu;<sub>1</sub> &cup; &beta;<sub>2</sub>&mu;<sub>2</sub> &cup; &beta;<sub>3</sub>&mu;<sub>3</sub> &cup; ... &cup; 
-      &beta;<sub>n</sub>&mu;<sub>n</sub>)&nbsp;&cap; R]&nbsp;]
-      <br>
-      Where &Beta; represents the attributes of the relation that are <b>NOT</b> included in 
-      any of the FDs, on either side 
-      <br><br>
-      <br>
-      &gamma; = &Alpha;&cup;&Beta; 
-      <br>
-      Where &gamma; is the set of attributes that <b>must be included within the candidate key</b> 
+      &Alpha; is the set of attributes that <b>must be included within the candidate key</b> 
       <br><br>
 
 2. Adding <i>accessory</i> attributes onto the necessary minimal attributes (intuition above):
     * In this context, an <b>accessory attribute</b> is one that is not part of our set of necessary minimal attributes, but exists within
     the relational schema<br>
-    <br> A heuristic approach is taken, where accessory attributes are added onto a working CK attribute, and a heuristic based on the amount of unmatched FDs is taken.
+    <br> A heuristic approach is taken, where accessory attributes are added onto a <i>working candidate key</i>, and a heuristic based on the amount of unmatched FDs is taken.
     The accessory attribute that is associated with the smallest heuristic value, is added onto the working CK attribute, and the
     process repeats until we've reached a minimal heuristic value of 0. 
