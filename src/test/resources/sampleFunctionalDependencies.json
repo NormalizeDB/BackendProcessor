@@ -1,0 +1,35 @@
+{
+  "samples": [
+    {
+      "schema": ["A","B","C","D","E","F","G","H"],
+      "functionalDepSet": [
+        {
+          "key": ["A"],
+          "derivation": ["B","C"]
+        },
+        {
+          "key": ["B"],
+          "derivation": ["C","F","H"]
+        },
+        {
+          "key": ["C","H"],
+          "derivation": ["G"]
+        },
+        {
+          "key": ["E"],
+          "derivation": ["A"]
+        },
+        {
+          "key": ["F"],
+          "derivation": ["E", "G"]
+        }
+      ],
+      "expected": [
+        "DA",
+        "DE",
+        "DB",
+        "DF"
+      ]
+    }
+  ]
+}

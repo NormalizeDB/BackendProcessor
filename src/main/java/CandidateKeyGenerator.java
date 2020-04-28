@@ -1,5 +1,7 @@
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -7,16 +9,24 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class CandidateKeyGenerator {
 
     public static void main(String[] args) {
-        RelationSchema rs = new RelationSchema(new String[]{"A","B","C","D","E","F","G","H"});
-        rs.addFunctionalDependency(new String[]{"A"}, new String[]{"B","C"});
-        rs.addFunctionalDependency(new String[]{"B"}, new String[]{"C","F", "H"});
-        rs.addFunctionalDependency(new String[]{"C", "H"}, new String[]{"G"});
-        rs.addFunctionalDependency(new String[]{"E"}, new String[]{"A"});
-        rs.addFunctionalDependency(new String[]{"F"}, new String[]{"E","G"});
+//        RelationSchema rs = new RelationSchema(new String[]{"A","B","C","D","E","F","G","H"});
+//        rs.addFunctionalDependency(new String[]{"A"}, new String[]{"B","C"});
+//        rs.addFunctionalDependency(new String[]{"B"}, new String[]{"C","F", "H"});
+//        rs.addFunctionalDependency(new String[]{"C", "H"}, new String[]{"G"});
+//        rs.addFunctionalDependency(new String[]{"E"}, new String[]{"A"});
+//        rs.addFunctionalDependency(new String[]{"F"}, new String[]{"E","G"});
+        RelationSchema rs = new RelationSchema(new String[]{"A", "B", "C", "D", "E", "F"});
+        rs.addFunctionalDependency(new String[]{"A"}, new String[]{"B"});
+        rs.addFunctionalDependency(new String[]{"B", "A"}, new String[]{"C"});
+        rs.addFunctionalDependency(new String[]{"B", "C"}, new String[]{"A", "B"});
+        rs.addFunctionalDependency(new String[]{"D", "E", "F"}, new String[]{"F", "E"});
+        rs.addFunctionalDependency(new String[]{"D", "E", "C", "F"}, new String[]{"F"});
+        rs.addFunctionalDependency(new String[]{"A", "B", "C", "D", "E", "F"}, new String[]{"F", "D"});
         String[] candidateKeys = CandidateKeyGenerator.generateCandidateKeys(rs);
         for(String ck: candidateKeys){
             System.out.println(ck);
@@ -38,7 +48,39 @@ public class CandidateKeyGenerator {
         //First we're going to simply determine whether the set of FDs contains all of the attr in the relation
         Set<Integer> attrSet = new HashSet<>(IntStream.range(0, attributeQuantity).boxed().collect(Collectors.toSet()));
 
-        Set<Integer> alphaSet = functionalDependencies.stream()
+        //Filter out trivial attributes that appear in the LHS and RHS
+        List<FunctionalDependency> filteredFDs = functionalDependencies.stream()
+                .map(x -> {
+                    HashMap<Integer, Integer> countMap = new HashMap<>();
+                    Stream.concat(
+                            Arrays.stream(x.getStandardKeys()),
+                            Arrays.stream(x.getStandardDerivations()))
+                            .forEach(z -> {
+                                countMap.computeIfPresent(z, (key, val) -> val + 1);
+                                if(!countMap.containsKey(z)){
+                                    countMap.put(z, 1);
+                                }
+                            });
+
+
+                    List<Integer> filteredKeys = new ArrayList<>();
+                    List<Integer> filteredDerivations = new ArrayList<>();
+                    for(Integer key: x.getStandardKeys()){
+                        if(countMap.containsKey(key) && countMap.get(key) == 1){
+                            filteredKeys.add(key);
+                        }
+                    }
+                    for(Integer deriv: x.getStandardDerivations()){
+                        if(countMap.containsKey(deriv) && countMap.get(deriv) == 1){
+                            filteredDerivations.add(deriv);
+                        }
+                    }
+                    return new FunctionalDependency(filteredKeys.toArray(new Integer[0])
+                            ,filteredDerivations.toArray(new Integer[0]));
+
+                }).collect(Collectors.toList());
+
+        Set<Integer> alphaSet = filteredFDs.stream()
                 .map(FunctionalDependency::getStandardDerivations)
                 .flatMap(Arrays::stream)
                 .collect(Collectors.toSet());
@@ -53,9 +95,17 @@ public class CandidateKeyGenerator {
         return finalRes;
     }
 
+    /**
+     * Determines all possible candidate keys
+     *
+     * @param essentialAttributes
+     * @param functionalDependencies
+     * @param attributes
+     * @return
+     */
     private static String[] determineCandidateKeys(Integer[] essentialAttributes
-            ,List<FunctionalDependency> functionalDependencies
-            ,String[] attributes) {
+            , List<FunctionalDependency> functionalDependencies
+            , String[] attributes) {
 
         LinkedList<Integer> accessoryAttributes = new LinkedList<>(
                 IntStream.range(0, attributes.length)
@@ -101,6 +151,7 @@ public class CandidateKeyGenerator {
                 //Add the accessory attribute that's associated with the most minimal heuristic to the tail end of our
                 //working candidate key list
                 ckPlaceholder.addLast(accessoryHeuristic);
+                accessoryAttributes.remove(accessoryHeuristic);
             }
         }
         return convertCandidateKeys(candidateKeys.toArray(new Integer[0][]), attributes);
@@ -132,7 +183,7 @@ public class CandidateKeyGenerator {
                 //Grab left side of FD
                 Set<Integer> currentFD = new HashSet<>(
                         Arrays.stream(functionalDependencies.get(i).getStandardKeys())
-                        .collect(Collectors.toSet()));
+                                .collect(Collectors.toSet()));
                 //If our CK's length is less than the FD's length, we break. Since the FD array is sorted,
                 //we can assume all proceeding FDs will be larger as well
                 if(currentFD.size() > ckAttrSet.size()){

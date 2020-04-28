@@ -42,6 +42,9 @@ For a set of functional dependencies (FDs)...
       <br><br>
       &Alpha; is the set of attributes that <b>must be included within the candidate key</b> 
       <br><br>
+      
+      &Alpha; is <b>filtered</b> on both the LHS and RHS of the FD to ensure that trivial 
+      redundancy is eliminated.
 
 2. Adding <i>accessory</i> attributes onto the necessary minimal attributes (intuition above):
     * In this context, an <b>accessory attribute</b> is one that is not part of our set of necessary minimal attributes, but exists within
