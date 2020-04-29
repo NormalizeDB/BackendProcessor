@@ -13,27 +13,6 @@ import java.util.stream.Stream;
 
 public class CandidateKeyGenerator {
 
-    public static void main(String[] args) {
-        RelationSchema rs = new RelationSchema(new String[]{"A","B","C","D","E","F","G","H"});
-        rs.addFunctionalDependency(new String[]{"C","H"}, new String[]{"G"});
-        rs.addFunctionalDependency(new String[]{"A"}, new String[]{"B","C"});
-        rs.addFunctionalDependency(new String[]{"B"}, new String[]{"C","F","H"});
-        rs.addFunctionalDependency(new String[]{"E"}, new String[]{"A"});
-        rs.addFunctionalDependency(new String[]{"F"}, new String[]{"E", "G"});
-
-//        RelationSchema rs = new RelationSchema(new String[]{"A", "B", "C", "D", "E", "F"});
-//        rs.addFunctionalDependency(new String[]{"A"}, new String[]{"B"});
-//        rs.addFunctionalDependency(new String[]{"B", "A"}, new String[]{"C"});
-//        rs.addFunctionalDependency(new String[]{"B", "C"}, new String[]{"A", "B"});
-//        rs.addFunctionalDependency(new String[]{"D", "E", "F"}, new String[]{"F", "E"});
-//        rs.addFunctionalDependency(new String[]{"D", "E", "C", "F"}, new String[]{"F"});
-//        rs.addFunctionalDependency(new String[]{"A", "B", "C", "D", "E", "F"}, new String[]{"F", "D"});
-        String[] candidateKeys = CandidateKeyGenerator.generateCandidateKeys(rs);
-        for(String ck: candidateKeys){
-            System.out.println(ck);
-        }
-    }
-
     public static String[] generateCandidateKeys(RelationSchema schema) {
         if(schema.getAttributes() == null || schema.getAttributes().length == 0){
             return null;
@@ -184,8 +163,8 @@ public class CandidateKeyGenerator {
     /**
      * Tests whether a candidate key is valid
      *
-     * @param currentCK
-     * @param functionalDependencies
+     * @param currentCK candidate key under test
+     * @param functionalDependencies Sorted FDs by key length
      * @return Amount of unmatched functional dependencies
      */
     private static int testCandidateKey(List<Integer> currentCK, List<FunctionalDependency> functionalDependencies) {

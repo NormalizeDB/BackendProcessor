@@ -18,8 +18,8 @@ public class RelationSchema {
                 .collect(Collectors.toMap(x -> String.valueOf(x[0]), y -> Integer.valueOf(String.valueOf(y[1]))));
     }
 
-    public RelationSchema(String[] relation, List<FunctionalDependency> integrityConstraints){
-        this(relation);
+    public RelationSchema(String[] attributes, List<FunctionalDependency> integrityConstraints){
+        this(attributes);
         this.integrityConstraints = integrityConstraints;
     }
 

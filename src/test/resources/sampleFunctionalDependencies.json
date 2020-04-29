@@ -1,34 +1,122 @@
 {
   "samples": [
     {
-      "schema": ["A","B","C","D","E","F","G","H"],
-      "functionalDepSet": [
+      "schema": ["W","X","Y","Z"],
+      "fds": [
         {
-          "key": ["A"],
-          "derivation": ["B","C"]
+          "key": ["Z"],
+          "derivation": ["W"]
         },
         {
-          "key": ["B"],
-          "derivation": ["C","F","H"]
+          "key": ["Y"],
+          "derivation": ["X","Z"]
         },
         {
-          "key": ["C","H"],
-          "derivation": ["G"]
-        },
-        {
-          "key": ["E"],
-          "derivation": ["A"]
-        },
-        {
-          "key": ["F"],
-          "derivation": ["E", "G"]
+          "key": ["W","X"],
+          "derivation": ["Y"]
         }
       ],
       "expected": [
-        "DA",
-        "DE",
-        "DB",
-        "DF"
+        "Y",
+        "WX",
+        "XZ"
+      ]
+    },
+    {
+      "schema": ["A","B","C","D","E"],
+      "fds": [
+        {
+          "key": ["B", "C"],
+          "derivation": ["A","D","E"]
+        },
+        {
+          "key": ["D"],
+          "derivation": ["B"]
+        }
+      ],
+      "expected":[
+        "BC",
+        "DC"
+      ]
+    },
+    {
+      "schema": ["A","B","C","D"],
+      "fds": [],
+      "expected": [
+        "ABCD"
+      ]
+    },
+    {
+      "schema": ["A","B","C","D","E"],
+      "fds": [
+        {
+          "key": ["A","B"],
+          "derivation": ["C"]
+        },
+        {
+          "key": ["A","C"],
+          "derivation": ["A"]
+        },
+        {
+          "key": ["D"],
+          "derivation": ["C"]
+        },
+        {
+          "key": ["E"],
+          "derivation": ["D"]
+        }
+      ],
+      "expected": [
+        "BEA"
+      ]
+    },
+    {
+      "schema": ["A","B","C","D","E","F","G"],
+      "fds": [
+        {
+          "key": ["C","F","G"],
+          "derivation": ["C"]
+        },
+        {
+          "key": ["A","B","D","E"],
+          "derivation": ["A"]
+        }
+      ],
+      "expected": [
+        "ABCDEFG"
+      ]
+    },
+    {
+      "schema": ["A","B","C","D","E","F"],
+      "fds": [
+        {
+          "key": ["A"],
+          "derivation": ["B"]
+        },
+        {
+          "key": ["B","A"],
+          "derivation": ["C"]
+        },
+        {
+          "key": ["B","C"],
+          "derivation": ["A","B"]
+        },
+        {
+          "key": ["D","E","F"],
+          "derivation": ["F","E"]
+        },
+        {
+          "key": ["D","E","C","F"],
+          "derivation": ["F"]
+        },
+        {
+          "key": ["A","B","C","D","E","F"],
+          "derivation": ["F","D"]
+        }
+      ],
+      "expected": [
+        "DEFA",
+        "DEFBC"
       ]
     }
   ]
