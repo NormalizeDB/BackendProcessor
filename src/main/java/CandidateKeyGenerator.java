@@ -14,19 +14,20 @@ import java.util.stream.Stream;
 public class CandidateKeyGenerator {
 
     public static void main(String[] args) {
-//        RelationSchema rs = new RelationSchema(new String[]{"A","B","C","D","E","F","G","H"});
-//        rs.addFunctionalDependency(new String[]{"A"}, new String[]{"B","C"});
-//        rs.addFunctionalDependency(new String[]{"B"}, new String[]{"C","F", "H"});
-//        rs.addFunctionalDependency(new String[]{"C", "H"}, new String[]{"G"});
-//        rs.addFunctionalDependency(new String[]{"E"}, new String[]{"A"});
-//        rs.addFunctionalDependency(new String[]{"F"}, new String[]{"E","G"});
-        RelationSchema rs = new RelationSchema(new String[]{"A", "B", "C", "D", "E", "F"});
-        rs.addFunctionalDependency(new String[]{"A"}, new String[]{"B"});
-        rs.addFunctionalDependency(new String[]{"B", "A"}, new String[]{"C"});
-        rs.addFunctionalDependency(new String[]{"B", "C"}, new String[]{"A", "B"});
-        rs.addFunctionalDependency(new String[]{"D", "E", "F"}, new String[]{"F", "E"});
-        rs.addFunctionalDependency(new String[]{"D", "E", "C", "F"}, new String[]{"F"});
-        rs.addFunctionalDependency(new String[]{"A", "B", "C", "D", "E", "F"}, new String[]{"F", "D"});
+        RelationSchema rs = new RelationSchema(new String[]{"A","B","C","D","E","F","G","H"});
+        rs.addFunctionalDependency(new String[]{"C","H"}, new String[]{"G"});
+        rs.addFunctionalDependency(new String[]{"A"}, new String[]{"B","C"});
+        rs.addFunctionalDependency(new String[]{"B"}, new String[]{"C","F","H"});
+        rs.addFunctionalDependency(new String[]{"E"}, new String[]{"A"});
+        rs.addFunctionalDependency(new String[]{"F"}, new String[]{"E", "G"});
+
+//        RelationSchema rs = new RelationSchema(new String[]{"A", "B", "C", "D", "E", "F"});
+//        rs.addFunctionalDependency(new String[]{"A"}, new String[]{"B"});
+//        rs.addFunctionalDependency(new String[]{"B", "A"}, new String[]{"C"});
+//        rs.addFunctionalDependency(new String[]{"B", "C"}, new String[]{"A", "B"});
+//        rs.addFunctionalDependency(new String[]{"D", "E", "F"}, new String[]{"F", "E"});
+//        rs.addFunctionalDependency(new String[]{"D", "E", "C", "F"}, new String[]{"F"});
+//        rs.addFunctionalDependency(new String[]{"A", "B", "C", "D", "E", "F"}, new String[]{"F", "D"});
         String[] candidateKeys = CandidateKeyGenerator.generateCandidateKeys(rs);
         for(String ck: candidateKeys){
             System.out.println(ck);
@@ -131,33 +132,53 @@ public class CandidateKeyGenerator {
             return convertCandidateKeys(new Integer[][]{essentialAttributes}, attributes);
         }
 
-        while (ckPlaceholder.size() < attributes.length) {
-            //Keep track of the accessory attribute with the most minimal heuristic
-            //Default to the first accessoryHeuristic...
-            Integer accessoryHeuristic = accessoryAttributes.getFirst();
-            int minimalHeuristic = Integer.MAX_VALUE;
-            for (Integer i : accessoryAttributes) {
-                ckPlaceholder.addLast(i);
-                int heuristic = testCandidateKey(ckPlaceholder, functionalDependencies);
-                if (heuristic < minimalHeuristic) {
-                    minimalHeuristic = heuristic;
-                    accessoryHeuristic = i;
+        LinkedList<Integer> workingAccessoryAttr = new LinkedList<>(accessoryAttributes);
+
+        for(Integer i: accessoryAttributes) {
+            //Intuition: by removing one of the attributes from the set for each iteration, we ensure that
+            //we never get a proper subset of CKs... We may get duplicates though
+            workingAccessoryAttr.remove(i);
+
+            while (!workingAccessoryAttr.isEmpty()) {
+                //Keep track of the accessory attribute with the most minimal heuristic
+                //Default to the first accessoryHeuristic...
+                Integer accessoryHeuristic = workingAccessoryAttr.getFirst();
+                List<Integer> zeroValHeuristicAttr = new ArrayList<>();
+                int minimalHeuristic = Integer.MAX_VALUE;
+                for (Integer j : workingAccessoryAttr) {
+                    ckPlaceholder.addLast(j);
+                    int heuristic = testCandidateKey(ckPlaceholder, functionalDependencies);
+                    if (heuristic < minimalHeuristic && heuristic != 0) {
+                        minimalHeuristic = heuristic;
+                        accessoryHeuristic = j;
+                    }
+                    if (heuristic == 0) {
+                        candidateKeys.add(ckPlaceholder.toArray(new Integer[0]));
+                        zeroValHeuristicAttr.add(j);
+                    }
+                    ckPlaceholder.removeLast();
                 }
-                if (heuristic == 0) {
-                    candidateKeys.add(ckPlaceholder.toArray(new Integer[0]));
-                }
-                ckPlaceholder.removeLast();
-            }
-            if (minimalHeuristic == 0) {
-                break;
-            } else {
-                //Add the accessory attribute that's associated with the most minimal heuristic to the tail end of our
-                //working candidate key list
                 ckPlaceholder.addLast(accessoryHeuristic);
-                accessoryAttributes.remove(accessoryHeuristic);
+                workingAccessoryAttr.remove(accessoryHeuristic);
+                //By removing all the values to provide a 0 heuristic, we are eliminating the chances of superset candidate keys
+                //that are built using already existing, smaller CKs
+                workingAccessoryAttr.removeAll(zeroValHeuristicAttr);
             }
+
+            //Refresh our working CK after each iteration
+            ckPlaceholder.clear();
+            ckPlaceholder.addAll(Arrays.stream(essentialAttributes).collect(Collectors.toList()));
+
+            workingAccessoryAttr.addAll(accessoryAttributes);
         }
-        return convertCandidateKeys(candidateKeys.toArray(new Integer[0][]), attributes);
+        //Remove duplicate CKs
+        Integer[][] duplicateFreeCKs = candidateKeys
+                .stream()
+                .map(Arrays::asList)
+                .distinct()
+                .map(x -> x.toArray(new Integer[0]))
+                .toArray(Integer[][]::new);
+        return convertCandidateKeys(duplicateFreeCKs, attributes);
     }
 
     /**
