@@ -6,9 +6,10 @@ node {
     withGradle() {
         stage("Compile"){
             String currPath = powershell 'pwd'
-            println 'Current Path: ${currPath}'
+            echo 'Current Path: ${currPath}'
             println 'Running compilation...'
             dir('./BackendProcessor'){
+                echo ls
                 println 'Compiling source classes...'
                 sh './gradlew clean build -x test'
                 println 'Compiling test classes'
