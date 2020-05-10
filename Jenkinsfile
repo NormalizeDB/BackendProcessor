@@ -3,7 +3,7 @@ node {
         println 'Checking out from SCM...'
         checkout scm
     }
-    withGradle('gradle-6.3') {
+    withGradle() {
         stage("Compile"){
             String currPath = powershell 'pwd'
             println 'Current Path: ${currPath}'
