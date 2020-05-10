@@ -8,13 +8,13 @@ node {
             powershell '$path = pwd; Write-Host $path'
             println 'Running compilation...'
             println 'Compiling source classes...'
-            sh './gradlew clean build -x test'
+            bat 'gradle clean build -x test'
             println 'Compiling test classes'
-            sh './gradlew testClasses'
+            bat 'gradle testClasses'
         }
         stage("Test"){
             println 'Running tests...'
-            sh './gradlew test'
+            bat 'gradle test'
         }
     }
     stage("Collect Test Results"){
