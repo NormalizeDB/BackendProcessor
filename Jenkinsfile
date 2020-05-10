@@ -9,15 +9,15 @@ node {
         println 'Running compilation...'
         dir('./BackendProcessor'){
             println 'Compiling source classes...'
-            bat 'gradlew clean build -x test'
+            bat 'call gradlew.bat clean build -x test'
             println 'Compiling test classes'
-            bat 'gradlew testClasses'
+            bat 'call gradlew.bat testClasses'
 
         }
     }
     stage("Test"){
         println 'Running tests...'
-        bat 'gradlew test'
+        bat 'call gradlew.bat test'
     }
     stage("Collect Test Results"){
         println 'Collecting Test Results...'
