@@ -1,23 +1,25 @@
 node {
+
     stage("Checkout"){
         println 'Checking out from SCM...'
         checkout scm
     }
-    stage("Compile"){
-        String currPath = powershell 'pwd'
-        println 'Current Path: ${currPath}'
-        println 'Running compilation...'
-        dir('./BackendProcessor'){
-            println 'Compiling source classes...'
-            bat 'call gradlew.bat clean build -x test'
-            println 'Compiling test classes'
-            bat 'call gradlew.bat testClasses'
-
+    withGradle(gradleName:'gradle-4.10')
+        stage("Compile"){
+            String currPath = powershell 'pwd'
+            println 'Current Path: ${currPath}'
+            println 'Running compilation...'
+            dir('./BackendProcessor'){
+                println 'Compiling source classes...'
+                bat 'gradle clean build -x test'
+                println 'Compiling test classes'
+                bat 'gradle testClasses'
+            }
         }
-    }
-    stage("Test"){
-        println 'Running tests...'
-        bat 'call gradlew.bat test'
+        stage("Test"){
+            println 'Running tests...'
+            bat 'gradle test'
+        }
     }
     stage("Collect Test Results"){
         println 'Collecting Test Results...'
