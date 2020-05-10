@@ -21,16 +21,8 @@ node {
     stage("Collect Test Results"){
         println 'Collecting Test Results...'
     }
-    post {
-        success {
-            stage("Mail Test Results") {
-                println 'Emailing Test Results to default recipients...'
-                mail subject:'BackendProcessor Build', body: 'Build Passed!'
-
-            }
-        }
-        failure {
-            println 'Test Failed...'
-        }
+    stage("Mail Test Results") {
+        println 'Emailing Test Results to default recipients...'
+        mail subject:'BackendProcessor Build', body: 'Build Passed!'
     }
 }
