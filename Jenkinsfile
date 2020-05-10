@@ -23,5 +23,6 @@ node {
     }
     stage("Mail Test Results"){
         println 'Emailing Test Results to [example@mail.com]...'
+        mail to:'mmelk057@uottawa.ca', subject:'BackendProcessor Build', body: 'Build Passed!'
     }
 }
