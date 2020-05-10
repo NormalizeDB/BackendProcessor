@@ -7,14 +7,10 @@ node {
         stage("Compile"){
             powershell '$path = pwd; Write-Host $path'
             println 'Running compilation...'
-            dir('./BackendProcessor'){
-                println 'Compiling source classes...'
-                def allFiles = sh(script:'ls', returnStdout: true)
-                echo allFiles
-                sh './gradlew clean build -x test'
-                println 'Compiling test classes'
-                sh './gradlew testClasses'
-            }
+            println 'Compiling source classes...'
+            sh './gradlew clean build -x test'
+            println 'Compiling test classes'
+            sh './gradlew testClasses'
         }
         stage("Test"){
             println 'Running tests...'
