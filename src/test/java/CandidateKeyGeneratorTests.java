@@ -18,7 +18,8 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
-public class CandidateKeyGeneratorTests {
+
+public class CandidateKeyGeneratorTests extends BaseTests {
 
     private static Map<RelationSchema, String[]> expectationMapping;
 
@@ -29,7 +30,7 @@ public class CandidateKeyGeneratorTests {
     public static void collectSamples() {
         expectationMapping = new LinkedHashMap<>();
         try {
-            URL url = Thread.currentThread().getContextClassLoader().getResource("sampleFunctionalDependencies.json");
+            URL url = Thread.currentThread().getContextClassLoader().getResource("test_resources/sampleFunctionalDependencies.json");
             FileReader sampleFile = new FileReader(url.getPath());
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(sampleFile);
