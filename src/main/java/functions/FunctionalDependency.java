@@ -1,3 +1,5 @@
+package functions;
+
 public class FunctionalDependency {
     private Integer[] standardKeys;
     private Integer[] standardDerivations;

@@ -1,3 +1,7 @@
+package functions;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -5,6 +9,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@JsonDeserialize(using = RelationSchemaDeserializer.class)
 public class RelationSchema {
     private Map<String, Integer> attributeMapping;
     private List<FunctionalDependency> integrityConstraints;
@@ -16,11 +21,6 @@ public class RelationSchema {
         attributeMapping = IntStream.range(0, attributes.length)
                 .mapToObj(index -> new Object[]{attributes[index], index})
                 .collect(Collectors.toMap(x -> String.valueOf(x[0]), y -> Integer.valueOf(String.valueOf(y[1]))));
-    }
-
-    public RelationSchema(String[] attributes, List<FunctionalDependency> integrityConstraints){
-        this(attributes);
-        this.integrityConstraints = integrityConstraints;
     }
 
     public void addFunctionalDependency(String[] keyVals, String[] derivations){
