@@ -1,7 +1,7 @@
-package services;
+package com.normalizedb.controllers;
 
-import functions.RelationSchema;
-import functions.CandidateKeyGenerator;
+import com.normalizedb.functions.RelationSchema;
+import com.normalizedb.functions.CandidateKeyGenerator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

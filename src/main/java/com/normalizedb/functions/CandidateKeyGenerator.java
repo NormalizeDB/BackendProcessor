@@ -1,4 +1,4 @@
-package functions;
+package com.normalizedb.functions;
 
 import java.util.ArrayList;
 import java.util.Arrays;

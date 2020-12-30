@@ -1,4 +1,4 @@
-package functions;
+package com.normalizedb.functions;
 
 public class FunctionalDependency {
     private Integer[] standardKeys;

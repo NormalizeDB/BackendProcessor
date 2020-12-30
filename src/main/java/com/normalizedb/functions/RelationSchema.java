@@ -1,4 +1,4 @@
-package functions;
+package com.normalizedb.functions;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
