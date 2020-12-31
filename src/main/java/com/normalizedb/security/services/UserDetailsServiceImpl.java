@@ -1,6 +1,7 @@
 package com.normalizedb.security.services;
 
 import com.normalizedb.security.entities.PrincipalUser;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -12,6 +13,7 @@ import java.util.Optional;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
+
     private UserRepository userRepository;
 
     public UserDetailsServiceImpl(UserRepository userRepository) {
@@ -19,10 +21,21 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<PrincipalUser> user = userRepository.findUserByUsername(username);
-        if(!user.isPresent()) {
-            throw new UsernameNotFoundException(String.format("The following username: {%s} cannot be found", username));
+    public UserDetails loadUserByUsername(String username) {
+        boolean shouldThrow = false;
+        Throwable exception = null;
+        Optional<PrincipalUser> user = Optional.empty();
+        try {
+            user = userRepository.findUserByUsername(username);
+            if(!user.isPresent()) {
+                shouldThrow = true;
+            }
+        } catch(Exception ex) {
+            exception = ex;
+            shouldThrow = true;
+        }
+        if(shouldThrow) {
+            throw new UsernameNotFoundException(null, exception);
         }
         PrincipalUser principalUser = user.get();
         return new User(principalUser.getUsername(),

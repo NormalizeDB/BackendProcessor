@@ -20,7 +20,6 @@ public class NormalizeService {
     public ResponseEntity<String[]> getCandidateKeys(@RequestBody() RelationSchema relationSchema){
         String[] candidateKeys = CandidateKeyGenerator.generateCandidateKeys(relationSchema);
         return new ResponseEntity<>(candidateKeys, HttpStatus.OK);
-
     }
 
 }

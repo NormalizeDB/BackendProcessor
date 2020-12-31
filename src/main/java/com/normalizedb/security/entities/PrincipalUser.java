@@ -9,7 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "Users", schema = "public")
+@Table(name = "users", schema = "public")
 @Getter
 @Setter
 public class PrincipalUser {
@@ -21,5 +21,5 @@ public class PrincipalUser {
     private String password;
 
     @Column(name = "role", insertable = false, updatable = false)
-    private Role role;
+    private String role;
 }

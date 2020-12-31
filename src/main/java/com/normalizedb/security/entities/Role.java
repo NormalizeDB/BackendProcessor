@@ -1,5 +1,7 @@
 package com.normalizedb.security.entities;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import java.util.HashMap;
 import java.util.Map;
 

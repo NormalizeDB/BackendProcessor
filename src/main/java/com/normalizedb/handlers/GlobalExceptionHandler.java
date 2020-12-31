@@ -1,34 +1,27 @@
 package com.normalizedb.handlers;
 
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
+import com.normalizedb.entities.ApiError;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
-@ControllerAdvice
-@Order(Ordered.HIGHEST_PRECEDENCE)
-public class GlobalExceptionHandler implements AuthenticationEntryPoint, AccessDeniedHandler {
+@RestControllerAdvice
+public class GlobalExceptionHandler {
 
-    @Override
-    @ExceptionHandler(value = {AuthenticationException.class})
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        response.sendError(HttpStatus.UNAUTHORIZED.value(), "Authentication Failed!");
-    }
-
-    @Override
-    @ExceptionHandler(value = {AccessDeniedException.class})
-    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException)
-            throws IOException, ServletException {
-        response.sendError(HttpStatus.UNAUTHORIZED.value(), "Authorization Failed! Insufficient Permissions!");
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(value = {Exception.class})
+    public ApiError handleGeneralException(HttpServletRequest request, Exception ex) {
+        //TODO: Once remote logging is setup, log the Bearer Token associated with each exception
+        return new ApiError(    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        "An Internal Server Error Occured!",
+                                ex.getLocalizedMessage(),
+                                Timestamp.from(LocalDateTime.now().toInstant(ZoneOffset.UTC))
+                            );
     }
 }
