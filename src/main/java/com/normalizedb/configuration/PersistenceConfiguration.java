@@ -1,6 +1,8 @@
 package com.normalizedb.configuration;
 
+import com.normalizedb.security.SecurityConstants;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -15,15 +17,29 @@ import javax.sql.DataSource;
 @EnableTransactionManagement
 public class PersistenceConfiguration {
 
+    private final SecurityConstants constants;
     @Autowired
-    private DataSource dataSource;
+    public PersistenceConfiguration(SecurityConstants constants) {
+        this.constants = constants;
+    }
+
+    @Primary
+    @Bean(name = "test-normalizedb")
+    public DataSource fetchDataSource() {
+        DataSourceBuilder sourceBuilder = DataSourceBuilder.create();
+        sourceBuilder.url(constants.getDataSourceUrl());
+        sourceBuilder.username(constants.getDataSourceUsername());
+        sourceBuilder.password(constants.getDataSourcePassword());
+        sourceBuilder.driverClassName("org.postgresql.Driver");
+        return sourceBuilder.build();
+    }
 
     @Primary
     @Bean(name = "entityManagerFactory")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
         factory.setPersistenceUnitName("normalizeDB");
-        factory.setDataSource(dataSource);
+        factory.setDataSource(fetchDataSource());
         factory.setPackagesToScan("com.normalizedb");
         HibernateJpaVendorAdapter vendor = new HibernateJpaVendorAdapter();
         //Update DB from configured application layer tables
