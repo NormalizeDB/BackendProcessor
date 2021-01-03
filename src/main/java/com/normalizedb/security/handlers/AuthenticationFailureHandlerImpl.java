@@ -21,8 +21,12 @@ import java.time.ZoneOffset;
 @Component
 public class AuthenticationFailureHandlerImpl implements AuthenticationFailureHandler, AuthenticationEntryPoint {
 
-    @Autowired
     private ObjectMapper mapper;
+
+    @Autowired
+    public AuthenticationFailureHandlerImpl(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception)

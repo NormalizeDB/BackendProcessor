@@ -1,13 +1,16 @@
 package com.normalizedb.security.configuration;
 
-import com.normalizedb.security.SecurityConstants;
 import com.normalizedb.security.handlers.AuthenticationFailureHandlerImpl;
 import com.normalizedb.security.handlers.AuthorizationFailureHandlerImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.access.expression.SecurityExpressionHandler;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.FilterInvocation;
+import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import com.normalizedb.security.jwt.JWTGenerator;
 import org.springframework.context.annotation.Configuration;
@@ -31,22 +34,26 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${com.normalizedb.valid-domains}")
     private String[] validDomains;
 
-    private final SecurityConstants securityConstants;
+    private static final String LOCALIP = "127.0.0.1/32";
     private final UserDetailsService userDetailsService;
     private final AuthenticationFailureHandlerImpl authenticationFailureHandler;
     private final AuthorizationFailureHandlerImpl authorizationFailureHandler;
     private final JWTGenerator generator;
+    private final JWTValidator authorizationFilter;
 
-    public WebSecurityConfig(SecurityConstants securityConstants,
-                             UserDetailsService userDetailsService,
+    //TODO: Configure a custom expression handler
+    private final SecurityExpressionHandler<FilterInvocation> expressionHandler = new DefaultWebSecurityExpressionHandler();
+
+    public WebSecurityConfig(UserDetailsService userDetailsService,
                              AuthenticationFailureHandlerImpl authenticationFailureHandler,
                              AuthorizationFailureHandlerImpl authorizationFailureHandler,
-                             JWTGenerator generator) {
-        this.securityConstants = securityConstants;
+                             JWTGenerator generator,
+                             JWTValidator authorizationFilter) {
         this.userDetailsService = userDetailsService;
         this.authenticationFailureHandler = authenticationFailureHandler;
         this.authorizationFailureHandler = authorizationFailureHandler;
         this.generator = generator;
+        this.authorizationFilter = authorizationFilter;
     }
 
     @Override
@@ -66,10 +73,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf()
                     .disable()
                 .authorizeRequests()
+                    .expressionHandler(expressionHandler)
+                    .antMatchers("/admin/signup").hasIpAddress(LOCALIP)
+                    .antMatchers("/normalize/**").access("hasRole('ROLE_USER')")
                 // A Request Matcher matches a request based on request meta-data (headers)
-                .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
+                    .requestMatchers(CorsUtils::isPreFlightRequest)
+                        .permitAll()
                 // authenticated() means that each request must have an authenticated SecurityContext
-                .anyRequest().authenticated()
                 .and()
                     .sessionManagement()
                     .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -80,7 +90,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                     .addFilter(authenticationFilter)
                 //DECODES JWT Token
-                    .addFilterAfter(new JWTValidator(authenticationManager(), securityConstants),
+                    .addFilterAfter(authorizationFilter,
                             UsernamePasswordAuthenticationFilter.class);
     }
 
@@ -110,7 +120,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         globalCorsConfig.setAllowedOrigins(Arrays.asList(validDomains));
         globalCorsConfig.addAllowedMethod(CorsConfiguration.ALL);
 
-        config.registerCorsConfiguration("/**", globalCorsConfig);
+        config.registerCorsConfiguration("/normalize/**", globalCorsConfig);
+        config.registerCorsConfiguration("/login", globalCorsConfig);
         return config;
     }
 

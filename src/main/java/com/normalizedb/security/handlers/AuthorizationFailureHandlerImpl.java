@@ -19,8 +19,12 @@ import java.time.ZoneOffset;
 @Component
 public class AuthorizationFailureHandlerImpl extends JWTValidatorFailureHandler {
 
-    @Autowired
     private ObjectMapper mapper;
+
+    @Autowired
+    public AuthorizationFailureHandlerImpl(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException)

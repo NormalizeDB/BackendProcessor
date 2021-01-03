@@ -1,4 +1,4 @@
-package com.normalizedb.security.entities;
+package com.normalizedb.security.entities.application;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

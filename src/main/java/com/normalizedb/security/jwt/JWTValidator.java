@@ -8,32 +8,40 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.Payload;
 import com.normalizedb.security.SecurityConstants;
 import com.normalizedb.security.handlers.JWTValidatorFailureHandler;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.core.GrantedAuthorityDefaults;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Collections;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.stream.Collectors;
 
-public class JWTValidator extends BasicAuthenticationFilter {
+@Component
+public class JWTValidator extends OncePerRequestFilter {
 
-    private final SecurityConstants constants;
+    private SecurityConstants constants;
     private JWTValidatorFailureHandler failureHandler;
 
-    public JWTValidator(AuthenticationManager authenticationManager, SecurityConstants constants) {
-      super(authenticationManager);
-      this.constants = constants;
-    }
-
-    public void setFailureHandler(JWTValidatorFailureHandler failureHandler) {
+    @Autowired
+    public JWTValidator(SecurityConstants constants,
+                        JWTValidatorFailureHandler failureHandler) {
+        this.constants = constants;
         this.failureHandler = failureHandler;
     }
 
@@ -58,10 +66,22 @@ public class JWTValidator extends BasicAuthenticationFilter {
         }
         JWTParser jwtParser = new JWTParser();
         Payload payload = jwtParser.parsePayload(jwt.getPayload());
+        //Verify that JWT is not yet expired
+        Long expiryMilli = payload.getClaim(SecurityConstants.Claims.EXPIRES_AT.getValue()).asLong();
+        LocalDateTime convertedExpiryDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(expiryMilli), ZoneId.from(ZoneOffset.UTC));
+        if(LocalDateTime.now().isAfter(convertedExpiryDate)) {
+            handleException(String.format("Token invalid. Expired on %s", convertedExpiryDate.toString()), null, request, response);
+            return;
+        }
+        //Map raw JWT granted authorities to POJOs
+        List<GrantedAuthority> grantedAuthorities = payload.getClaim(SecurityConstants.Claims.AUTHORITIES.getValue()).asList(String.class)
+                                                            .stream()
+                                                                .map((String rawAuthority) -> new SimpleGrantedAuthority(constants.getAuthorityPrefix() + rawAuthority))
+                                                            .collect(Collectors.toList());
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                 payload.getSubject(),
                 null,
-                Collections.emptyList()
+                grantedAuthorities
         );
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         chain.doFilter(request, response);
@@ -69,12 +89,12 @@ public class JWTValidator extends BasicAuthenticationFilter {
 
     private String extractToken(HttpServletRequest request) {
         String headerVal = request.getHeader(HttpHeaders.AUTHORIZATION);
-        String tokenDelim = " ";
+        final String tokenDelim = " ";
         if(headerVal == null || headerVal.split(tokenDelim).length != 2
                 || !headerVal.split(tokenDelim)[0].equals(SecurityConstants.TokenType.BEARER.getValue())) {
             return null;
         }
-        String[] props = headerVal.split(" ");
+        String[] props = headerVal.split(tokenDelim);
         return props[1];
     }
 

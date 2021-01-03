@@ -38,8 +38,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new UsernameNotFoundException(null, exception);
         }
         PrincipalUser principalUser = user.get();
-        return new User(principalUser.getUsername(),
-                principalUser.getPassword(),
-                Collections.emptyList());
+        return User.withUsername(principalUser.getUsername())
+                .password(principalUser.getPassword())
+                .roles(principalUser.getRole())
+                .build();
     }
 }
