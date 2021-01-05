@@ -1,15 +1,14 @@
 package com.normalizedb.security.configuration;
 
 import com.normalizedb.security.SecurityConstants;
+import com.normalizedb.security.entities.application.Role;
 import com.normalizedb.security.handlers.AuthenticationFailureHandlerImpl;
 import com.normalizedb.security.handlers.AuthorizationFailureHandlerImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.access.AccessDecisionManager;
-import org.springframework.security.access.expression.SecurityExpressionHandler;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.FilterInvocation;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import com.normalizedb.security.jwt.JWTGenerator;
 import org.springframework.context.annotation.Configuration;
@@ -37,7 +36,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final JWTGenerator generator;
     private final JWTValidator authorizationFilter;
 
-    private final SecurityExpressionHandler<FilterInvocation> filterExpressionHandler;
     private final AccessDecisionManager accessDecisionManager;
 
     public WebSecurityConfig(UserDetailsService userDetailsService,
@@ -46,15 +44,17 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                              JWTGenerator generator,
                              JWTValidator authorizationFilter,
                              SecurityConstants constants,
-                             SecurityExpressionHandler<FilterInvocation> filterExpressionHandler,
                              AccessDecisionManager accessDecisionManager) {
         this.userDetailsService = userDetailsService;
         this.authenticationFailureHandler = authenticationFailureHandler;
         this.authorizationFailureHandler = authorizationFailureHandler;
         this.generator = generator;
+
         this.authorizationFilter = authorizationFilter;
+        //Ensure that all mapped URIs, apart from 'admin' URIs, are validated for a JWT token
+        this.authorizationFilter.registerExcludePattern("/admin/**");
+
         this.constants  = constants;
-        this.filterExpressionHandler = filterExpressionHandler;
         this.accessDecisionManager = accessDecisionManager;
     }
 
@@ -76,9 +76,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                     .disable()
                 .authorizeRequests()
                     .accessDecisionManager(accessDecisionManager)
-                    .expressionHandler(filterExpressionHandler)
                     .antMatchers("/admin/**").access("hasIpAddress('127.0.0.1') or hasIpAddress('::1')")
-                    .antMatchers("/normalize/**").hasRole("USER")
+                    .antMatchers("/normalize/**").hasRole(Role.USER.getRole())
                 // A Request Matcher matches a request based on request meta-data (headers)
                     .requestMatchers(CorsUtils::isPreFlightRequest)
                         .permitAll()

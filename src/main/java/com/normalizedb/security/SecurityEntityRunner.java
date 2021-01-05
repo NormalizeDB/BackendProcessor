@@ -21,6 +21,6 @@ public class SecurityEntityRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         //When Spring's application context is loaded, but before application startup, pre-persist all the
         //applicable roles defined in the application layer
-        //rolesService.persistRoles();
+        rolesService.persistRoles();
     }
 }

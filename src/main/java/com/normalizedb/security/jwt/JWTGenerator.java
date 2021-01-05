@@ -1,16 +1,12 @@
 package com.normalizedb.security.jwt;
 
-
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.normalizedb.security.SecurityConstants;
 import com.normalizedb.security.entities.application.AuthToken;
 import javafx.util.Pair;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -19,13 +15,12 @@ import org.springframework.stereotype.Component;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.security.Security;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 public class JWTGenerator implements AuthenticationSuccessHandler {
@@ -48,8 +43,8 @@ public class JWTGenerator implements AuthenticationSuccessHandler {
                                                 tokenPair.getValue().toString(),
                                                 Timestamp.from(LocalDateTime.now().toInstant(ZoneOffset.UTC))
                                             );
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setStatus(HttpStatus.OK.value());
+        response.setContentType(MediaType.APPLICATION_JSON);
+        response.setStatus(Response.Status.OK.getStatusCode());
         mapper.writeValue(response.getOutputStream(), authToken);
         response.flushBuffer();
     }
@@ -68,9 +63,9 @@ public class JWTGenerator implements AuthenticationSuccessHandler {
         //2. An expiry timestamp, representing the expiration time of the JWT token, passed in as a Long value
         //3. An authorities list, consisting of the role(s) applicable to the given user (ie. ADMIN, USER, etc.)
         String token = JWT.create().withSubject((String) authentication.getPrincipal())
-                                .withClaim(SecurityConstants.Claims.ISSUED_AT.getValue(), convertTime(issueTime))
-                                .withClaim(SecurityConstants.Claims.EXPIRES_AT.getValue(), convertTime(expiryTime))
-                                .withArrayClaim(SecurityConstants.Claims.AUTHORITIES.getValue(), parsedAuthorities)
+                                .withClaim(SecurityConstants.Claim.ISSUED_AT.getKey(), convertTime(issueTime))
+                                .withClaim(SecurityConstants.Claim.EXPIRES_AT.getKey(), convertTime(expiryTime))
+                                .withArrayClaim(SecurityConstants.Claim.AUTHORITIES.getKey(), parsedAuthorities)
                                 .sign(Algorithm.HMAC256(constants.getJwtSecret()));
         return new Pair<>(token, expiryTime);
     }

@@ -41,13 +41,20 @@ dependencies {
         exclude module: 'spring-boot-starter-aop'
     }
 
-    implementation('org.springframework:spring-webmvc')
+    implementation('org.springframework:spring-web')
 
     implementation ('com.fasterxml.jackson.core:jackson-databind')
     implementation ('com.fasterxml.jackson.datatype:jackson-datatype-jsr310')
     implementation('org.springframework.boot:spring-boot-starter-log4j2')
+
     implementation('org.springframework.boot:spring-boot-starter-tomcat')
-    implementation('org.springframework:spring-web')
+    implementation('org.glassfish.jersey.core:jersey-server')
+    implementation('org.glassfish.jersey.containers:jersey-container-servlet-core')
+    implementation('org.glassfish.jersey.containers:jersey-container-servlet')
+    implementation('org.glassfish.jersey.media:jersey-media-json-jackson')
+    implementation('org.glassfish.jersey.ext:jersey-spring3') {
+        exclude module: 'tiger-types'
+    }
 
     // IF USING INTELLIJ, MAKE SURE YOU INSTALL LOMBOK PRE-PROCESSOR PLUGIN
     compileOnly('org.projectlombok:lombok')

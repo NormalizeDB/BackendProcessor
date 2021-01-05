@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.method.P;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
@@ -16,16 +17,16 @@ public class SecurityConstants {
     private static final TemporalAmount tokenValidity = Duration.ofMinutes(30);
     private static final String AUTHORITY_PREFIX = "ROLE_";
 
-    public enum Claims {
+    public enum Claim {
         ISSUED_AT("issuedAt"),
         EXPIRES_AT("expiresAt"),
         AUTHORITIES("g_authorities");
-        private final String val;
-        Claims(String val) {
-            this.val = val;
+        private final String key;
+        Claim(String key) {
+            this.key = key;
         }
-        public String getValue() {
-            return val;
+        public String getKey() {
+            return key;
         }
     }
     public enum TokenType {

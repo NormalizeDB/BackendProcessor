@@ -2,24 +2,26 @@ package com.normalizedb.controllers;
 
 import com.normalizedb.functions.RelationSchema;
 import com.normalizedb.functions.CandidateKeyGenerator;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
 
-@RestController
-@RequestMapping(path = "normalize")
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Response;
+
+@Path("normalize")
+@Controller
 public class NormalizeController {
 
-    @GetMapping(path = "/candidatekey",
-        consumes = MediaType.APPLICATION_JSON_VALUE,
-        produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String[]> getCandidateKeys(@RequestBody() RelationSchema relationSchema){
+    @POST
+    @Path("/candidatekey")
+    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    @Consumes(MediaType.APPLICATION_JSON_VALUE)
+    public Response getCandidateKeys(RelationSchema relationSchema){
         String[] candidateKeys = CandidateKeyGenerator.generateCandidateKeys(relationSchema);
-        return new ResponseEntity<>(candidateKeys, HttpStatus.OK);
+        return Response.ok().entity(candidateKeys).build();
     }
 
 }

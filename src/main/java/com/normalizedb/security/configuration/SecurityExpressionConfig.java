@@ -101,9 +101,7 @@ public class SecurityExpressionConfig {
         return new GrantedAuthorityDefaults(constants.getAuthorityPrefix());
     }
 
-    @Bean
-    @Primary
-    public SecurityExpressionHandler<FilterInvocation> getFilterExpressionHandler() {
+    private SecurityExpressionHandler<FilterInvocation> getFilterExpressionHandler() {
         //The default PermissionEvaluator instance for DefaultWebSecurity is DenyAllPermissionEvaluator.
         //This implies that any invocation to 'hasPermission(...)' will be denied
         DefaultWebSecurityExpressionHandler expressionHandler = new DefaultWebSecurityExpressionHandler();
@@ -117,6 +115,7 @@ public class SecurityExpressionConfig {
     public AccessDecisionManager getDecisionManager() {
         AccessDecisionVoter<Object> roleHierarchyVoter = fetchRoleHierachyVoter();
         WebExpressionVoter webExpressionVoter = new WebExpressionVoter();
+        webExpressionVoter.setExpressionHandler(getFilterExpressionHandler());
         return new AffirmativeBased(Arrays.asList(roleHierarchyVoter, webExpressionVoter));
     }
 

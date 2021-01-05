@@ -9,4 +9,8 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 public abstract class JWTValidatorFailureHandler implements AccessDeniedHandler {
     private String failureReason;
     private Throwable failureCause;
+    protected void clearFailure() {
+        this.failureReason = null;
+        this.failureCause = null;
+    }
 }
