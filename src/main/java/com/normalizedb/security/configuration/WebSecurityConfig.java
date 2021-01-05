@@ -1,16 +1,15 @@
 package com.normalizedb.security.configuration;
 
+import com.normalizedb.security.SecurityConstants;
 import com.normalizedb.security.handlers.AuthenticationFailureHandlerImpl;
 import com.normalizedb.security.handlers.AuthorizationFailureHandlerImpl;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.expression.SecurityExpressionHandler;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.FilterInvocation;
-import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import com.normalizedb.security.jwt.JWTGenerator;
 import org.springframework.context.annotation.Configuration;
@@ -31,29 +30,32 @@ import java.util.Arrays;
 @Configuration
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-    @Value("${com.normalizedb.valid-domains}")
-    private String[] validDomains;
-
-    private static final String LOCALIP = "127.0.0.1/32";
+    private final SecurityConstants constants;
     private final UserDetailsService userDetailsService;
     private final AuthenticationFailureHandlerImpl authenticationFailureHandler;
     private final AuthorizationFailureHandlerImpl authorizationFailureHandler;
     private final JWTGenerator generator;
     private final JWTValidator authorizationFilter;
 
-    //TODO: Configure a custom expression handler
-    private final SecurityExpressionHandler<FilterInvocation> expressionHandler = new DefaultWebSecurityExpressionHandler();
+    private final SecurityExpressionHandler<FilterInvocation> filterExpressionHandler;
+    private final AccessDecisionManager accessDecisionManager;
 
     public WebSecurityConfig(UserDetailsService userDetailsService,
                              AuthenticationFailureHandlerImpl authenticationFailureHandler,
                              AuthorizationFailureHandlerImpl authorizationFailureHandler,
                              JWTGenerator generator,
-                             JWTValidator authorizationFilter) {
+                             JWTValidator authorizationFilter,
+                             SecurityConstants constants,
+                             SecurityExpressionHandler<FilterInvocation> filterExpressionHandler,
+                             AccessDecisionManager accessDecisionManager) {
         this.userDetailsService = userDetailsService;
         this.authenticationFailureHandler = authenticationFailureHandler;
         this.authorizationFailureHandler = authorizationFailureHandler;
         this.generator = generator;
         this.authorizationFilter = authorizationFilter;
+        this.constants  = constants;
+        this.filterExpressionHandler = filterExpressionHandler;
+        this.accessDecisionManager = accessDecisionManager;
     }
 
     @Override
@@ -73,9 +75,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf()
                     .disable()
                 .authorizeRequests()
-                    .expressionHandler(expressionHandler)
-                    .antMatchers("/admin/signup").hasIpAddress(LOCALIP)
-                    .antMatchers("/normalize/**").access("hasRole('ROLE_USER')")
+                    .accessDecisionManager(accessDecisionManager)
+                    .expressionHandler(filterExpressionHandler)
+                    .antMatchers("/admin/**").access("hasIpAddress('127.0.0.1') or hasIpAddress('::1')")
+                    .antMatchers("/normalize/**").hasRole("USER")
                 // A Request Matcher matches a request based on request meta-data (headers)
                     .requestMatchers(CorsUtils::isPreFlightRequest)
                         .permitAll()
@@ -90,8 +93,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                     .addFilter(authenticationFilter)
                 //DECODES JWT Token
-                    .addFilterAfter(authorizationFilter,
-                            UsernamePasswordAuthenticationFilter.class);
+                    .addFilterAfter(authorizationFilter, authenticationFilter.getClass());
     }
 
     @Override
@@ -117,7 +119,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         CorsConfiguration globalCorsConfig = new CorsConfiguration();
         globalCorsConfig.applyPermitDefaultValues();
-        globalCorsConfig.setAllowedOrigins(Arrays.asList(validDomains));
+        globalCorsConfig.setAllowedOrigins(Arrays.asList(constants.getValidDomains()));
         globalCorsConfig.addAllowedMethod(CorsConfiguration.ALL);
 
         config.registerCorsConfiguration("/normalize/**", globalCorsConfig);

@@ -15,10 +15,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.ServletRegistration;
 import java.time.LocalDateTime;
 
 @RestController
-@RequestMapping(name = "/admin")
+@RequestMapping(path = "admin")
 public class AdminController {
     private PasswordEncoder encoder;
     private UserService userService;

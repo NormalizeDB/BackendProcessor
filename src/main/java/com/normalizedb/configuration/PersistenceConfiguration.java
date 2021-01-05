@@ -43,7 +43,7 @@ public class PersistenceConfiguration {
         factory.setPackagesToScan("com.normalizedb");
         HibernateJpaVendorAdapter vendor = new HibernateJpaVendorAdapter();
         //Update DB from configured application layer tables
-        vendor.setShowSql(true);
+        vendor.setShowSql(false);
         vendor.setGenerateDdl(true);
         vendor.setDatabase(Database.POSTGRESQL);
         factory.setJpaVendorAdapter(vendor);

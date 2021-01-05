@@ -1,12 +1,18 @@
 package com.normalizedb.security;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.method.P;
 import org.springframework.stereotype.Component;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.temporal.TemporalAmount;
 
 @Component
 public class SecurityConstants {
+    @Value("${com.normalizedb.valid-domains}")
+    private String[] validDomains;
     private static final TemporalAmount tokenValidity = Duration.ofMinutes(30);
     private static final String AUTHORITY_PREFIX = "ROLE_";
 
@@ -74,4 +80,6 @@ public class SecurityConstants {
     public TemporalAmount getTokenValidity() { return tokenValidity; }
 
     public String getAuthorityPrefix() { return AUTHORITY_PREFIX; }
+
+    public String[] getValidDomains() { return validDomains; }
 }

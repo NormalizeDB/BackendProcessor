@@ -10,12 +10,18 @@ import com.normalizedb.security.SecurityConstants;
 import com.normalizedb.security.handlers.JWTValidatorFailureHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
+import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -29,6 +35,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,18 +44,47 @@ public class JWTValidator extends OncePerRequestFilter {
 
     private SecurityConstants constants;
     private JWTValidatorFailureHandler failureHandler;
+    private List<RequestMatcher> requestMatchers;
+
 
     @Autowired
     public JWTValidator(SecurityConstants constants,
                         JWTValidatorFailureHandler failureHandler) {
         this.constants = constants;
         this.failureHandler = failureHandler;
+        this.requestMatchers = new ArrayList<>();
+    }
+
+    public void registerPattern(String pattern, HttpMethod method) {
+        this.requestMatchers.add(new AntPathRequestMatcher(pattern, method.name()));
+    }
+
+    public boolean affimativeRequestValidity(HttpServletRequest request) {
+        if(requestMatchers.isEmpty()) {
+            return false;
+        }
+        for(RequestMatcher matcher: requestMatchers) {
+            if(matcher.matches(request)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
+        //Validate whether authorization checks should occur for a given request.
+        //Uses an affirmative voting decision scheme where is one RequestMatcher matches to the following request,
+        //the request is opted in to be validated.
+        if(!affimativeRequestValidity(request)) {
+            if(logger.isDebugEnabled()) {
+                logger.debug(String.format("Skipping authorization.. Method: %s, URI: \"%s\"", request.getMethod(),request.getRequestURI()));
+            }
+            chain.doFilter(request,response);
+            return;
+        }
 
         DecodedJWT jwt;
         try{

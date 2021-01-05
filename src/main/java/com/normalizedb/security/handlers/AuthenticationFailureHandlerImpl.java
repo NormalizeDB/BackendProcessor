@@ -3,6 +3,7 @@ package com.normalizedb.security.handlers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.normalizedb.entities.ApiError;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
@@ -21,10 +22,9 @@ import java.time.ZoneOffset;
 @Component
 public class AuthenticationFailureHandlerImpl implements AuthenticationFailureHandler, AuthenticationEntryPoint {
 
-    private ObjectMapper mapper;
+    private final ObjectMapper mapper;
 
-    @Autowired
-    public AuthenticationFailureHandlerImpl(ObjectMapper mapper) {
+    public AuthenticationFailureHandlerImpl(@Qualifier("customMapper") ObjectMapper mapper) {
         this.mapper = mapper;
     }
 

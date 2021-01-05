@@ -6,10 +6,18 @@ import javafx.util.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.security.access.AccessDecisionVoter;
+import org.springframework.security.access.expression.SecurityExpressionHandler;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
+import org.springframework.security.access.vote.AffirmativeBased;
 import org.springframework.security.access.vote.RoleHierarchyVoter;
 import org.springframework.security.config.core.GrantedAuthorityDefaults;
+import org.springframework.security.web.FilterInvocation;
+import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
+import org.springframework.security.web.access.expression.WebExpressionVoter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,9 +89,8 @@ public class SecurityExpressionConfig {
         return roleHierarchy;
     }
 
-
     @Bean
-    public RoleHierarchyVoter fetchRoleVoter() {
+    public RoleHierarchyVoter fetchRoleHierachyVoter() {
         RoleHierarchyVoter voter = new RoleHierarchyVoter(fetchRoleHierachy());
         voter.setRolePrefix(grantedAuthorityDefaults().getRolePrefix());
         return voter;
@@ -93,4 +100,24 @@ public class SecurityExpressionConfig {
     public GrantedAuthorityDefaults grantedAuthorityDefaults() {
         return new GrantedAuthorityDefaults(constants.getAuthorityPrefix());
     }
+
+    @Bean
+    @Primary
+    public SecurityExpressionHandler<FilterInvocation> getFilterExpressionHandler() {
+        //The default PermissionEvaluator instance for DefaultWebSecurity is DenyAllPermissionEvaluator.
+        //This implies that any invocation to 'hasPermission(...)' will be denied
+        DefaultWebSecurityExpressionHandler expressionHandler = new DefaultWebSecurityExpressionHandler();
+        expressionHandler.setDefaultRolePrefix(grantedAuthorityDefaults().getRolePrefix());
+        expressionHandler.setRoleHierarchy(fetchRoleHierachy());
+        return expressionHandler;
+    }
+
+    @Bean
+    @Primary
+    public AccessDecisionManager getDecisionManager() {
+        AccessDecisionVoter<Object> roleHierarchyVoter = fetchRoleHierachyVoter();
+        WebExpressionVoter webExpressionVoter = new WebExpressionVoter();
+        return new AffirmativeBased(Arrays.asList(roleHierarchyVoter, webExpressionVoter));
+    }
+
 }

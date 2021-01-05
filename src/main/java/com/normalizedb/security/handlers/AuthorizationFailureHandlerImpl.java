@@ -3,6 +3,8 @@ package com.normalizedb.security.handlers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.normalizedb.entities.ApiError;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
@@ -19,10 +21,9 @@ import java.time.ZoneOffset;
 @Component
 public class AuthorizationFailureHandlerImpl extends JWTValidatorFailureHandler {
 
-    private ObjectMapper mapper;
+    private final ObjectMapper mapper;
 
-    @Autowired
-    public AuthorizationFailureHandlerImpl(ObjectMapper mapper) {
+    public AuthorizationFailureHandlerImpl(@Qualifier("customMapper") ObjectMapper mapper) {
         this.mapper = mapper;
     }
 

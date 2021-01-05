@@ -16,8 +16,7 @@ public class RelationSchemaDeserializer extends JsonDeserializer<RelationSchema>
     //TODO: Add request body structure validation
 
     @Override
-    public RelationSchema deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-        throws IOException {
+    public RelationSchema deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode node = objectMapper.readTree(jsonParser);
         Iterator<JsonNode> attributeIterator = node.get("attributes").iterator();

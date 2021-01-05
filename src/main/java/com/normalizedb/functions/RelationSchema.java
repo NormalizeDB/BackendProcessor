@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-@JsonDeserialize(using = RelationSchemaDeserializer.class)
 public class RelationSchema {
     private Map<String, Integer> attributeMapping;
     private List<FunctionalDependency> integrityConstraints;

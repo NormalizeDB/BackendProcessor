@@ -8,6 +8,7 @@ import com.normalizedb.security.SecurityConstants;
 import com.normalizedb.security.entities.application.AuthToken;
 import javafx.util.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -29,11 +30,14 @@ import java.util.List;
 @Component
 public class JWTGenerator implements AuthenticationSuccessHandler {
 
-    @Autowired
-    private SecurityConstants constants;
+    private final SecurityConstants constants;
+    private final ObjectMapper mapper;
 
-    @Autowired
-    private ObjectMapper mapper;
+    public JWTGenerator(SecurityConstants constants,
+                        @Qualifier("customMapper") ObjectMapper mapper) {
+        this.constants = constants;
+        this.mapper = mapper;
+    }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -54,8 +58,11 @@ public class JWTGenerator implements AuthenticationSuccessHandler {
         LocalDateTime issueTime = LocalDateTime.now();
         LocalDateTime expiryTime = issueTime.plus(constants.getTokenValidity());
         //Convert Collection to List
-        List<GrantedAuthority> authorities = new ArrayList<>(authentication.getAuthorities().size());
-        authorities.addAll(authentication.getAuthorities());
+        String[] parsedAuthorities = new String[authentication.getAuthorities().size()];
+        GrantedAuthority[] providedAuthorities = authentication.getAuthorities().toArray(new GrantedAuthority[0]);
+        for(int i = 0; i < parsedAuthorities.length; i++) {
+            parsedAuthorities[i] = providedAuthorities[i].getAuthority();
+        }
         //Our JWT Token consists of 3 payload structures:
         //1. An issue timestamp, representing when the JWT token was created, passed in as a Long value
         //2. An expiry timestamp, representing the expiration time of the JWT token, passed in as a Long value
@@ -63,7 +70,7 @@ public class JWTGenerator implements AuthenticationSuccessHandler {
         String token = JWT.create().withSubject((String) authentication.getPrincipal())
                                 .withClaim(SecurityConstants.Claims.ISSUED_AT.getValue(), convertTime(issueTime))
                                 .withClaim(SecurityConstants.Claims.EXPIRES_AT.getValue(), convertTime(expiryTime))
-                                .withClaim(SecurityConstants.Claims.AUTHORITIES.getValue(), authorities)
+                                .withArrayClaim(SecurityConstants.Claims.AUTHORITIES.getValue(), parsedAuthorities)
                                 .sign(Algorithm.HMAC256(constants.getJwtSecret()));
         return new Pair<>(token, expiryTime);
     }
